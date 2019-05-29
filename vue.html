@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+
+    <div id="app"> <!-- Todo dentro de este div está funcionando con Vue ya que en el script llamé a este elemento como el padre--> 
+        <h2>Las {{ producto }} están en venta</h2>
+        <ol>
+            <li v-for="element in elements"> <!-- de esta forma llamo al array--> 
+                    {{element}}
+            </li>
+        </ol>
+        <ul>
+            <li v-for="items in lista"> <!-- recorro el array y traigo el nombre y la cantidad de elementos que hay--> 
+                    {{items.name}}{{items.cantidad}} 
+                    <span v-if="items.cantidad >=1" > Hay disponible</span>
+                    <!-- Si hay más de un elemento, entonces me escribe que esta disponible, sino out of stock--> 
+                    <span v-else> Out of Stock</span>
+            </li>
+        </ul>
+    </div>
+    <div id="app2">
+        <p v-bind:title="info">Ayuda</p>
+        <input v-model= "name" placeholder="name">
+        <button v-on:click="click">boton</button>
+        <p v-bind:title= "fecha">Que fecha es hoy?</p>
+        <!-- En este caso al pasar por encima del parrafo, me indica que hora es--> 
+        <span @mouseOver="mouseOver" >{{message}}</span> <!-- Cuando paso por encima, el texto se modifica, en este caso se da vuelta--> 
+    </div>
+            
+    <script>
+        const app = new Vue({ /* da comienzo al framework Vue*/
+            el: '#app', /* tomo el elemento que engloba todo lo que va a funcionar con Vue*/
+            data: { /* toda la información*/
+                producto: 'Frutas',
+                elements:  [ /*Array de elementos*/
+                    'Banana',
+                    'Manzana',
+                    'Pera'
+                    ],
+                
+                lista: [ /* Objeto*/
+                    {
+                        'name': 'Botas ',
+                        'cantidad': 2
+                    },
+                    {
+                        'name': 'Remeras ',
+                        'cantidad': 0
+                    },
+                    {
+                        'name': 'Pantalon ',
+                        'cantidad': 4
+                    } 
+                ],
+            },
+        })
+        const app2 = new Vue ({
+            el:'#app2',
+            data:{
+                info:'Debes colocar tu nombre', /* Te indica en u ntexto por encima lo que debes hacer*/
+                fecha:'Hoy es ' + new Date().toLocaleString() + " en Argentina", /*Te dice la fecha de hoy*/
+                message: "Adios!"
+            },
+            methods: { /* Con methods creo los eventos*/
+                click: function (event) {
+                    alert('Hola ' + name +'!') 
+                },
+                mouseOver: function(event) {
+                    this.message = this.message.split('').reverse().join('')
+                }, /* Me ivierte el mensaje*/
+            }
+        })
+    </script>
+<!-- Notas que tomé al estudiar
+
+    v- es una directiva. Es lo que se usa en Vue para indicar que se realice una acción específica.
+
+    v-for = Es un for de javascript, me recorre todo el array.
+
+    v-if = Es un if de javascript, le coloco una condición que se debe cumplir para que eso funcione. Ej:
+            <h2 v-if="element===0"> No hay más</h2> 
+        Esto me indica que solamente si el elemento es estrictamente igual a cero se puede escribir que no hay más.
+
+    v-else= si no lo cumple
+
+    v-show= me muestra algo desde el principio y se juega con el CSS para ver si se muestra o no. Se puede utilizar transiciones:
+            En HTML
+                <div id="demo">
+                    <button v-on:click="show = !show">
+                        Toggle
+                    </button>
+                    <transition name="fade">
+                        <p v-if="show">hello</p>
+                    </transition>
+                </div>
+            En Script
+                new Vue({
+                    el: '#demo',
+                    data: {
+                        show: true
+                    }
+                })
+                .fade-enter-active, .fade-leave-active {
+                    transition: opacity .5s;
+                }
+                .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+                    opacity: 0;
+                }
+            Esto me crea un boton, que al apretarlo el texto que se muestra desaparece, con un fade.
+
+    v-model= se utiliza con los inputs, creando una variable que luego la utilizo en una función. Para colocar un texto poner placeholder.
+
+    v-bind:____ = me pega la información en un atributo en html.
+    V-bind:title = me coloca un mensaje cuando paso el mouse sobre el elemento.
+
+    v-on:___ = agregar eventos, como on click.
+            en script se escribe todo dentro de methods:{}
+
+    Para llamar a la informacion de Vue en HTML se utiliza {{}}.
+
+    Modificadores estan escritos con un .(punto) delante. Ejemplo:
+                v-on:submit.prevent="...."
+
+    v-bind y v-on tienen shortcuts que son mas rapidos de usar:
+        v-bind:____ = ---- :____=
+        v-on:______= ------ @_____=
+--------
+
+    Si quiero traer el array de información desde otro lado, uso json
+
+        created () {
+            fetch('https://api.myjson.com/bins/74l63')
+            then(response =>response.json())
+            .then(json=>{
+                this.products=json.products
+            })
+
+            EN HTML:
+                <ul>
+                    <li v-for="product in products">
+                        {{product}}
+                    </li>
+                </ul>  
+            Asi me trae toda la información, si yo quiero que me traiga una parte específica entonces coloco por ejemplo
+                {{product.quantity}} {{product.name}}
+
+
+    Vue.components
+        Son instancias de Vue, que ya tienen predefinidos elementos a usar.
+            Vue.components ('nombre del componente',{
+                template: 'elemento de html que quiero agregar' 
+            })
+        Este componente se puede usar dentro de la raíz que utilizamos de Vue y dentro de el elemento en html que catalogamos como el padre del Vue.
+        Para crear una lista, por ejemplo, es necesario crear un array de elementos dentro del Vue y luego en el componente agregar un array props, donde se van a volcar los elementos del array del Vue.
+            ej:
+
+            En script
+                Vue.component('list-text'),{
+                    props: ['list'],
+                    template:'<li>{{list.text}}</li>'
+                } ---- esto me indica que en el li me va a escribir el text dentro del array props, denominado list
+
+                const app = new Vue ({
+                    el:'#app',
+                    data: {
+                        listaShop: [
+                           {id:0, text:'zapatos'},
+                           {id:1, text:'remera'},
+                           {id:2, text:'pantalon'}
+                        ] ----- escribo el array de elementos
+                    }
+                })
+
+            en HTML
+                <ul>
+                    <list-text
+                        v-for= "item in listaShop" ---- recorro el array del Vue
+                        v-bind:list ="item"> -----pego los items al array prop que se denomina list
+                    </list-text> ---- me muestra los elementos
+                </ul>
+
+            Los componentes sirven para que se puedan complejizar sin afectar la estructura del Vue padre
+
+        Computed properties
+
+            Son expresiones que dependen de propiedades antes declaradas, y mientras estas no cambien, las computed properties tampoco lo harán y no se volverán a actualizar hasta que la propiedad principal no cambie. Ejemplo:
+                HTML
+                    <div id="example">
+                        <p>Original message: "{{ message }}"</p>
+                        <p>Computed reversed message: "{{ reversedMessage }}"</p>
+                    </div>
+                Script
+                    var vm = new Vue({
+                        el: '#example',
+                        data: {
+                            message: 'Jessica'
+                        },
+                        computed: {
+                            reversedMessage: function () {
+                                return this.message.split('').reverse().join('')
+                            }
+                        }
+                    })
+                En este ejemplo, el mensaje es Jessica. Lo que hace el computed es crear la función reversedMessage tomando el mensaje e inviertiéndolo. Mientras el mensaje siga siendo Jessica, la función no va a actualizarse.
+
+            En cambio, si utilizamos Methods, la función va a actualizarse cada vez que volvamos a renderizar.
+                    Methods: {
+                        reverseMessage: function () {
+                            return this.message.split('').reverse().join('')
+                        }
+                    }
+            Como se ve, se puede utilizar, pero en este caso aunque el mensaje no cambie, se va a recorrer la funcion cada vez que renderizamos.
+            Methods se utilia también cuando se quiere colocar eventos. Como por ejemplo on click:
+                HTML
+                    <div id="app">
+                    <input v-model= "name" placeholder="name">
+                    <button v-on:click="click">boton</button>
+                    </div>
+                Script
+                    const app = new Vue ({
+                    el:'#app',
+                        methods: {
+                            click: function (event) {
+                                alert('Hola ' + name +'!') 
+                            }
+                        }
+                    })
+            }
+-->
+</body>
+</html>
